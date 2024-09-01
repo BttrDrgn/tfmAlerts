@@ -30,7 +30,22 @@ namespace tfmAlert
                 return;
             }
 
-            var device = devices[0];
+            ILiveDevice device = null;
+            for(int i = 0; i < devices.Count; ++i)
+            {
+                if (!devices[i].Description.Contains("loopback"))
+                {
+                    device = devices[i];
+                    break;
+                }
+            }
+
+            if (device == null)
+            {
+                Console.WriteLine("Unable to find a non loopback network device!");
+                return;
+            }
+
             Console.WriteLine($"Using device {device.Description}");
 
             var config = new DeviceConfiguration()
