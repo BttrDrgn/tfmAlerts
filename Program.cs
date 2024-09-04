@@ -1,5 +1,6 @@
 ﻿using PacketDotNet;
 using SharpPcap;
+using System.IO;
 using tfmAlert.Handlers;
 
 namespace tfmAlert
@@ -17,6 +18,30 @@ namespace tfmAlert
 
         static void Main(string[] args)
         {
+            string path = "./MapCodes.tfma";
+            if (File.Exists(path))
+            {
+                List<string> codes = File.ReadAllText(path).Split(',').ToList();
+
+                foreach(var code in codes)
+                {
+                    if (int.TryParse(code, out int c))
+                    {
+                        MapChangeHandler.Codes.Add(c);
+                    }
+                }
+            }
+            else
+            {
+                using (var file = File.Create(path))
+                {
+                    using(var writer = new StreamWriter(file))
+                    {
+                        writer.Write("2019");
+                    }
+                }
+            }
+
             Audio.Cache("sham", "./sfx/sham.mp3");
             Audio.Cache("cheese", "./sfx/cheese.mp3");
 
@@ -84,14 +109,15 @@ namespace tfmAlert
                     int index = payloadData.FindPattern("?? ?? 0x05 0x02 0x00 ?? ?? ?? 0x00");
                     if (index != -1 && index <= 8) packetType = TFMPacketType.MapChange;
 
+#if DEBUG
+                    Console.WriteLine();
+                    PrintHexDump(payloadData);
+                    Console.WriteLine();
+#endif
+
                     Handler handler;
                     if (PacketHandlers.TryGetValue(packetType, out handler))
                     {
-#if DEBUG
-                        Console.WriteLine();
-                        PrintHexDump(payloadData);
-                        Console.WriteLine();
-#endif
                         handler?.Run(payloadData);
                     }
                 }
