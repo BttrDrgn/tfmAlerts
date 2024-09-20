@@ -19,26 +19,24 @@ namespace tfmAlert
         static void Main(string[] args)
         {
             string path = "./MapCodes.tfma";
-            if (File.Exists(path))
-            {
-                List<string> codes = File.ReadAllText(path).Split(',').ToList();
-
-                foreach(var code in codes)
-                {
-                    if (int.TryParse(code, out int c))
-                    {
-                        MapChangeHandler.Codes.Add(c);
-                    }
-                }
-            }
-            else
+            if (!File.Exists(path))
             {
                 using (var file = File.Create(path))
                 {
                     using(var writer = new StreamWriter(file))
                     {
-                        writer.Write("2019");
+                        writer.Write("2019,2021");
                     }
+                }
+            }
+
+            List<string> codes = File.ReadAllText(path).Split(',').ToList();
+
+            foreach (var code in codes)
+            {
+                if (int.TryParse(code, out int c))
+                {
+                    MapChangeHandler.Codes.Add(c);
                 }
             }
 
