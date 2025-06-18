@@ -25,20 +25,24 @@ namespace tfmAlert
                 {
                     using(var writer = new StreamWriter(file))
                     {
-                        writer.Write("2019,2021");
+                        writer.Write("2019, 2020, 2021, 2022");
                     }
                 }
             }
 
-            List<string> codes = File.ReadAllText(path).Split(',').ToList();
+            List<string> codes = File.ReadAllText(path).Replace(" ", "").Split(',').ToList();
 
+            string maps = "";
             foreach (var code in codes)
             {
                 if (int.TryParse(code, out int c))
                 {
+                    maps += $"{c}, ";
                     MapChangeHandler.Codes.Add(c);
                 }
             }
+            Logger.InfoLog($"Listening for maps: {maps}");
+
 
             Audio.Cache("sham", "./sfx/sham.mp3");
             Audio.Cache("cheese", "./sfx/cheese.mp3");
@@ -49,7 +53,7 @@ namespace tfmAlert
 
             if (devices.Count < 1)
             {
-                Console.WriteLine("No capture devices found.");
+                Logger.InfoLog("No capture devices found.");
                 return;
             }
 
@@ -65,26 +69,24 @@ namespace tfmAlert
 
             if (device == null)
             {
-                Console.WriteLine("Unable to find a non loopback network device!");
+                Logger.InfoLog("Unable to find a non loopback network device!");
                 return;
             }
 
-            Console.WriteLine($"Using device {device.Description}");
+            Logger.InfoLog($"Using device {device.Description}");
 
             var config = new DeviceConfiguration()
             {
                 Mode = DeviceModes.Promiscuous,
                 ReadTimeout = 1000,
             };
+
             device.Open(config);
-
             device.Filter = "tcp port 11801 or tcp port 12801 or tcp port 13801 or tcp port 14801 or tcp port 15801";
-
             device.OnPacketArrival += new PacketArrivalEventHandler(OnPacketArrival);
-
             device.StartCapture();
 
-            Console.WriteLine("Press Enter to stop...");
+            Logger.InfoLog("Press Enter to stop...");
             Console.ReadLine();
 
             device.StopCapture();
